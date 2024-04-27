@@ -3,6 +3,10 @@ An unofficial OpenAI library for Python, featuring an integrated Bing Custom Sea
 
 See example below for a quick start.
 
+First, get the library with [pip](https://pypi.org/project/openai-api-with-easy-tools-and-web-browsing/): **pip install openai-api-with-easy-tools-and-web-browsing**
+
+Then, you can use the following code to get started:
+
 ```
 import src.openai_api_with_easy_tools_and_web_browsing as webBrowsingApiGPT
 
