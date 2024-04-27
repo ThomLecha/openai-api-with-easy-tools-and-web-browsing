@@ -1,0 +1,19 @@
+[project]
+name = "openai_api_with_easy_tools_and_web_browsing"
+version = "0.0.1"
+authors = [
+  { name="ThomLecha", email="hamster12@hotmail.fr" },
+]
+description = "An unofficial OpenAI library for Python, featuring an integrated Bing Custom Search API for web browsing (free) and easy-to-use custom tools"
+
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/ThomLecha/openai-api-with-easy-tools-and-web-browsing"
+Issues = "https://github.com/ThomLecha/openai-api-with-easy-tools-and-web-browsing/issues"
