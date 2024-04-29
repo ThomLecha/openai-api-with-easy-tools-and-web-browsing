@@ -16,7 +16,7 @@ First, get the library with [pip](https://pypi.org/project/openai-api-with-easy-
 Then, you can use the following code to get started:
 
 ```
-import src.openai_api_with_easy_tools_and_web_browsing as webBrowsingApiGPT
+import openai_api_with_easy_tools_and_web_browsing as webBrowsingApiGPT
 
 # Enter our API keys
 subscriptionKey = ""

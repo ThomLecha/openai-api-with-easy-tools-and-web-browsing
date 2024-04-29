@@ -14,6 +14,14 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.dependencies]
+openai = "^1.3.5"
+requests = "^2.31.0"
+
 [project.urls]
 Homepage = "https://github.com/ThomLecha/openai-api-with-easy-tools-and-web-browsing"
 Issues = "https://github.com/ThomLecha/openai-api-with-easy-tools-and-web-browsing/issues"
