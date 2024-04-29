@@ -1,6 +1,6 @@
 [project]
 name = "openai_api_with_easy_tools_and_web_browsing"
-version = "1.0.3"
+version = "1.0.5"
 authors = [
   { name="ThomLecha", email="hamster12@hotmail.fr" },
 ]
