@@ -19,10 +19,11 @@ class BingSearchEngine():
         chatCompletion = self.openaiClient.chat.completions.create(model=model, messages=[{"role": "system", "content": systemMessage}, {"role": "user", "content": userMessage}])
         return(chatCompletion.choices[0].message.content)
 
-    def runBingSearch(self,searchQuery, verbose=False):
+    def runBingSearch(self,searchQuery, verbosity=0):
         """Cette fonction effectue une recherche Bing et retourne les résultats sous forme de texte."""
 
-        print("Running Bing search for query: " + searchQuery)
+        if verbosity >= 1:
+            print("Running Bing search for query: " + searchQuery)
 
         # On crée la requête HTTP
         bingQuery = BING_CUSTOM_SEARCH_API_URL + "q='" + searchQuery + "'&customconfig=0"
@@ -44,7 +45,7 @@ class BingSearchEngine():
         # On retire le dernier retour à la ligne
         searchResultsString = searchResultsString[:-2]
 
-        if verbose == True:
+        if verbosity >= 2:
             print("bingQuery :")
             print(bingQuery)
             print("searchResultsString :")
@@ -54,11 +55,13 @@ class BingSearchEngine():
 
 
 
-    def getSearchQueries(self, userRequest, verbose=False):
+    def getSearchQueries(self, userRequest, verbosity=0):
         """Cette fonction génère des requêtes de recherche Bing pour satisfaire la demande de l'utilisateur
         (via un traitement par un LLM)"""
 
-        print("Generating search queries for Bing to satisfy the user's request...")
+        if verbosity >= 1:
+            print("Generating search queries for Bing to satisfy the user's request...")
+
         # On enrichit le prompt avec des exemples pour mieux guider la génération des requêtes
         prompt = "Based on the user's request, generate one or several (but non-redundant) short search queries for Bing. " \
                  "If the request covers multiple topics, provide separate queries for each topic, using semicolons to separate them." \
@@ -74,7 +77,7 @@ class BingSearchEngine():
         # On scinde la réponse en utilisant le point-virgule comme séparateur et on élimine les espaces superflus
         searchQueriesList = [query.strip() for query in searchQueries.split(';')]
 
-        if verbose:
+        if verbosity >= 1:
             print("searchQueriesList :")
             print(searchQueriesList)
 
@@ -82,16 +85,18 @@ class BingSearchEngine():
 
 
 
-    def processSearchResults(self, userRequest, searchResultsString, verbose=False):
+    def processSearchResults(self, userRequest, searchResultsString, verbosity=0):
         """Cette fonction analyse les résultats de recherche Bing pour répondre à la demande de l'utilisateur
         (via un traitement par un LLM)"""
 
-        print("Processing Bing search results...")
+        if verbosity >= 1:
+            print("Processing Bing search results...")
+
         # On interagit avec le LLM Haiku de Anthropic pour analyser les résultats de recherche Bing
         prompt = "Analyze these Bing search results below to give a short answer to this user request '" + userRequest + "'\n\n'" + searchResultsString + "'"
         analysis = self.getLLMAnswer(prompt, model=self.model)
 
-        if verbose == True:
+        if verbosity >= 2:
             print("analysis :")
             print(analysis)
 
@@ -100,15 +105,15 @@ class BingSearchEngine():
 
 
 
-    def bingSearch(self, userRequest, verbose=False):
+    def bingSearch(self, userRequest, verbosity=0):
         """Cette fonction effectue une recherche Bing basée sur la demande de l'utilisateur et analyse les résultats
         (via un traitement par un LLM)"""
 
         # On génère une ou des requêtes de recherche Bing
-        searchQueriesList = self.getSearchQueries(userRequest, verbose=verbose)
+        searchQueriesList = self.getSearchQueries(userRequest, verbosity=verbosity)
 
         # On exécute la ou les recherches Bing
-        searchResultsString = [self.runBingSearch(e, verbose) for e in searchQueriesList]
+        searchResultsString = [self.runBingSearch(e, verbosity) for e in searchQueriesList]
 
         # On concatène les résultats de recherche avec une petite mise en forme pour séparer les différentes requêtes
         cleanSearchResultsString = ""
@@ -116,7 +121,7 @@ class BingSearchEngine():
             cleanSearchResultsString += "SEARCH QUERY " + str(i+1) + " : '" + searchQueriesList[i] + "'\n'''\n" + searchResultsString[i] + "'''\n\n"
 
         # On analyse les résultats de(s) recherche(s)
-        analysis = self.processSearchResults(userRequest, cleanSearchResultsString, verbose=verbose)
+        analysis = self.processSearchResults(userRequest, cleanSearchResultsString, verbosity=verbosity)
 
         # On renvoie l'analyse avec un texte d'introduction
         analysis = "HERE IS THE ANALYSIS OF THE BING SEARCH RESULT BASED ON THE USER'S REQUEST : \n" + analysis
@@ -189,7 +194,7 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
 
         return(toolReturnList)
 
-    def getLLMAnswerWithWebBrowsingAndTools(self, userMessage, systemMessage="You are a helpful assistant", model="gpt-3.5-turbo", mode="ponctual", toolList=[], toolDescriptionList=[]) :
+    def getLLMAnswerWithWebBrowsingAndTools(self, userMessage, systemMessage="You are a helpful assistant", model="gpt-3.5-turbo", mode="ponctual", toolList=[], toolDescriptionList=[], verbosity=0):
         """Cette fonction interagit avec un LLM pour obtenir une réponse à partir d'un message utilisateur.
         Il y a le mode 'ponctual' pour avoir un unique renvoie ou le mode 'continuous' pour avoir
         une conversation continue avec input utilisateur (mettre alors userMessage=None)."""
@@ -203,7 +208,7 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
         # Boucle de conversation continue
         while True:
             if mode == "continuous":
-                print("Type 'exit' to exit the program. \nYour request : ")
+                print("\nYour request (Type 'exit' to exit the program) : ")
                 userMessage = input()
                 if userMessage.lower() == "exit":
                     break
@@ -218,8 +223,9 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
             while run.status == "requires_action":
                 # On récupère les outils à appeler
                 toolsToCall = run.required_action.submit_tool_outputs.tool_calls
-                print("Tools to call :")
-                [print("   " + str(t)) for t in toolsToCall]
+                if verbosity >= 1:
+                    print("Tools to call :")
+                    [print("   " + str(t)) for t in toolsToCall]
                 toolReturnList = self.getToolReturnList(toolsToCall, toolList=toolList)
                 run = self.openaiClient.beta.threads.runs.submit_tool_outputs(thread_id=thread.id, run_id=run.id, tool_outputs=toolReturnList)
                 # Attente de la fin de l'exécution
@@ -234,5 +240,5 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
                 return(self.getMessageListFromThread(thread.id)[0])
 
             # Affichage des messages et on recommence la boucle pour continuer la conversation
-            print("Assistant response:\n" + self.getMessageListFromThread(thread.id)[0])
+            print("\nAssistant response:\n" + self.getMessageListFromThread(thread.id)[0])
             time.sleep(0.1)
