@@ -13,7 +13,7 @@ The response, using a web search and a custom tool to add two numbers, should be
 
 First, get an API key from OpenAI [here](https://openai.com/blog/openai-api) and get a Bing Custom Search API key, which you can get [here](https://azuremarketplace.microsoft.com/fr/marketplace/apps/Microsoft.BingCustomSearch?tab=Overview) ([free for limited use](https://www.microsoft.com/en-us/bing/apis/pricing))
 
-Then, get the library with [pip](https://pypi.org/project/openai-api-with-easy-tools-and-web-browsing/): **pip install openai-api-with-easy-tools-and-web-browsing**
+Then, get the [library](https://pypi.org/project/openai-api-with-easy-tools-and-web-browsing/) with pip: **pip install openai-api-with-easy-tools-and-web-browsing**
 
 And then, you can use the following code to get started:
 
