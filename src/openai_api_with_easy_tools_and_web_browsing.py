@@ -146,6 +146,12 @@ BING_SEARCH_DESCRIPTION = {
     }
 }
 
+class runFailedError(Exception):
+    pass
+
+class runIncompleteError(Exception):
+    pass
+
 class OpenaiApiWithEasyToolsAndWebBrowsing():
     """This class allows interacting with the OpenAI API to get responses from user messages."""
 
@@ -166,7 +172,7 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
             # Check the status of the run 10 times per second
             time.sleep(0.1)
             run = self.openaiClient.beta.threads.runs.retrieve(thread_id=threadId, run_id=runId)
-            if run.status in ["completed", "failed", "requires_action"]:
+            if run.status in ["completed", "failed", "incomplete", "requires_action"]:
                 return(run)
             # Lines below are not necessary
             elif run.status == "in_progress" :
@@ -194,9 +200,21 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
 
         return(toolReturnList)
 
-    def getLLMAnswerWithWebBrowsingAndTools(self, userMessage, systemMessage="You are a helpful assistant", model="gpt-3.5-turbo", mode="ponctual", toolList=[], toolDescriptionList=[], verbosity=0):
+    def getLLMAnswer(self,
+                     userMessage,
+                     systemMessage="You are a helpful assistant",
+                     model="gpt-3.5-turbo",
+                     mode="ponctual",
+                     toolList=[],
+                     toolDescriptionList=[],
+                     temperature=1,
+                     top_p=1,
+                     max_prompt_tokens=32768,
+                     max_completion_tokens=32768,
+                     verbosity=0):
         """This function interacts with an LLM to get a response from a user message.
-        There is 'ponctual' mode for a single response or 'continuous' mode for continuous conversation with user input (then set userMessage=None)."""
+        There is 'ponctual' mode for a single response or 'continuous' mode for
+        continuous conversation with user input (then set userMessage=None)."""
 
         # Initialize the assistant with the list of tools
         assistant = self.openaiClient.beta.assistants.create(instructions=systemMessage, model=model, tools=toolDescriptionList)
@@ -214,7 +232,13 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
 
             # Create a message and a run
             self.openaiClient.beta.threads.messages.create(thread_id=thread.id, role="user", content=userMessage)
-            run = self.openaiClient.beta.threads.runs.create(thread_id=thread.id, assistant_id=assistant.id)
+            run = self.openaiClient.beta.threads.runs.create(thread_id=thread.id,
+                                                             assistant_id=assistant.id,
+                                                             temperature=temperature,
+                                                             top_p=top_p,
+                                                             max_prompt_tokens=max_prompt_tokens,
+                                                             max_completion_tokens=max_completion_tokens
+                                                             )
             # Wait for the end of the run
             run = self.waitForRunCompletion(thread.id, run.id)
 
@@ -223,16 +247,20 @@ class OpenaiApiWithEasyToolsAndWebBrowsing():
                 # Retrieve the tools to be called
                 toolsToCall = run.required_action.submit_tool_outputs.tool_calls
                 if verbosity >= 1:
-                    print("Tools to call :")
+                    print("Tool(s) called:")
                     [print("   " + str(t)) for t in toolsToCall]
                 toolReturnList = self.getToolReturnList(toolsToCall, toolList=toolList)
                 run = self.openaiClient.beta.threads.runs.submit_tool_outputs(thread_id=thread.id, run_id=run.id, tool_outputs=toolReturnList)
                 # Wait for the end of the run
                 run = self.waitForRunCompletion(thread.id, run.id)
 
-            # If the discussion run returns a failure, display it
+            # If the discussion run returns a failure, raise an exception
             if run.status == "failed":
-                print(run.error)
+                raise runFailedError(run.last_error)
+
+            # If the discussion run returns "incomplete", raise an exception
+            if run.status == "incomplete":
+                raise runIncompleteError(run.incomplete_details)
 
             # If in punctual mode, display the messages and exit the loop
             if mode == "ponctual":

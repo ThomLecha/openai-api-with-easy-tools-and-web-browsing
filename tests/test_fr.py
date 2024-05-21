@@ -42,18 +42,24 @@ adderDescription = {
 }
 
 # On crée une instance de la classe 'OpenaiApiWithEasyToolsAndWebBrowsing'
-openaiEpiWithEasyToolsAndWebBrowsing = webBrowsingApiGPT.OpenaiApiWithEasyToolsAndWebBrowsing(openAIAPIKey)
+openaiApiWithEasyToolsAndWebBrowsing = webBrowsingApiGPT.OpenaiApiWithEasyToolsAndWebBrowsing(openAIAPIKey)
 
 ### Renvoie d'une réponse à un prompt en mode 'ponctual' ###
 print("MODE PONCTUEL\n")
 prompt = "Tu peux chercher sur internet la population de Paris et de New York en l'année 2015, puis additionner les 2 valeurs et me dire le résultat, et enfin ensuite ajouter 10 000 000 à ce résultat"
 # On utilise la fonction 'getLLMAnswerWithWebBrowsingAndTools' pour obtenir une réponse à partir d'un message utilisateur
-answer = openaiEpiWithEasyToolsAndWebBrowsing.getLLMAnswerWithWebBrowsingAndTools(prompt, systemMessage="You are a helpful assistant", model="gpt-3.5-turbo", mode="ponctual", toolList=[bingSearch, adder], toolDescriptionList=[bingSearchDescription, adderDescription], verbosity=1)
+answer = openaiApiWithEasyToolsAndWebBrowsing.getLLMAnswer(prompt, systemMessage="You are a helpful assistant", model="gpt-3.5-turbo", mode="ponctual",
+                                                           toolList=[bingSearch, adder], toolDescriptionList=[bingSearchDescription, adderDescription],
+                                                           temperature=0.9, top_p=1,
+                                                           verbosity=1)
 # La réponse, en utilisant l'outil de web browsing et l'additionneur doit être quelque chose du genre :
 # "La population totale de Paris et de New York en 2015 était d'environ 31 082 144 habitants.
 # Si l'on ajoute 10 000 000 à ce nombre, on obtient 41 082 144."
 print(answer)
 
-### Discussion en mode 'continuous' ###s
+### Discussion en mode 'continuous' ###
 print("\n\n\nMODE CONTINUE\n")
-openaiEpiWithEasyToolsAndWebBrowsing.getLLMAnswerWithWebBrowsingAndTools(None, systemMessage="You are a helpful assistant", model="gpt-3.5-turbo", mode="continuous", toolList=[bingSearch, adder], toolDescriptionList=[bingSearchDescription, adderDescription], verbosity=1)
+openaiApiWithEasyToolsAndWebBrowsing.getLLMAnswer(None, systemMessage="You are a helpful assistant", model="gpt-4o", mode="continuous",
+                                                  toolList=[bingSearch, adder], toolDescriptionList=[bingSearchDescription, adderDescription],
+                                                  max_prompt_tokens=4096, max_completion_tokens=2048,
+                                                  verbosity=1)
